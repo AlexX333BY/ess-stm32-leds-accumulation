@@ -18,10 +18,13 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include <stdbool.h>
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+
+bool isRunning = true;
 
 /**
   * @brief  The application entry point.
@@ -41,8 +44,40 @@ int main(void)
   MX_GPIO_Init();
 
   /* Infinite loop */
-  while (1)
-  {
+  const uint32_t delayLength = 1000;
+  const uint8_t ledsCount = 8;
+  uint8_t filledLeds = 0;
+  uint16_t led;
+
+	while (true) {
+    if (!isRunning) {
+      HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3 
+                              |GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7, GPIO_PIN_RESET);
+      filledLeds = 0;
+      while (!isRunning) {
+        HAL_Delay(1);
+      }
+    }
+    
+    /* if all leds were filled, reset all leds */
+    if (filledLeds == ledsCount) {
+      HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3 
+                              |GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7, GPIO_PIN_RESET);
+      filledLeds = 0;
+    }
+    
+		/* for leds that are not filled, set them for 1 sec */
+    led = GPIO_PIN_0;
+    for (uint8_t ledNo = 0; isRunning && (ledNo < (ledsCount - filledLeds)); ++ledNo) {
+      HAL_GPIO_WritePin(GPIOB, led, GPIO_PIN_SET);
+      HAL_Delay(delayLength);
+      HAL_GPIO_WritePin(GPIOB, led, GPIO_PIN_RESET);
+      led <<= 1;
+    }
+
+    /* set last unfilled led */
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0 << (ledsCount - filledLeds - 1), GPIO_PIN_SET);
+    ++filledLeds;
   }
 }
 
@@ -112,6 +147,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+}
+
+void EXTI0_IRQHandler(void)
+{
+  isRunning = !isRunning;
 }
 
 /**
