@@ -49,7 +49,7 @@ int main(void)
   uint8_t filledLeds = 0;
   uint16_t led;
 
-	while (true) {
+  while (true) {
     if (!isRunning) {
       HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3 
                               |GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7, GPIO_PIN_RESET);
@@ -64,9 +64,10 @@ int main(void)
       HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3 
                               |GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7, GPIO_PIN_RESET);
       filledLeds = 0;
+      HAL_Delay(delayLength);
     }
     
-		/* for leds that are not filled, set them for 1 sec */
+    /* for leds that are not filled, set them for 1 sec */
     led = GPIO_PIN_0;
     for (uint8_t ledNo = 0; isRunning && (ledNo < (ledsCount - filledLeds)); ++ledNo) {
       HAL_GPIO_WritePin(GPIOB, led, GPIO_PIN_SET);
